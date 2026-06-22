@@ -1,39 +1,55 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:rendar_lab/models/drawing_path_model.dart';
 
 class DrawingCanvas extends CustomPainter {
+  final List<DrawingPathModel> paths;
+  final List<Offset> currentPaint;
+
+  DrawingCanvas({
+    super.repaint,
+    required this.paths,
+    required this.currentPaint,
+  });
   // Painting method, Canvas = the paper to draw and paint on it
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 3;
+      ..color = Colors.blue
+      ..strokeWidth = 5
+      ..isAntiAlias = true
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
 
-    canvas.drawLine(Offset(50, 50), Offset(50, 150), paint);
-    canvas.drawArc(
-      // rect used to define the center to start drawing and the radius for the fromCircle
-      Rect.fromCircle(center: Offset(300, 300), radius: 100),
-      // it's okay to use from center when u do not want t perfect circle
-      // Rect.fromCenter(center: Offset(300, 300), width: 350, height: 200),
-      pi,
-      2 * pi,
-      false,
-      paint,
-    );
+    for (var drawingPath in paths) {
+      Path path = Path();
+      if (drawingPath.points.isNotEmpty) {
+        path.moveTo(drawingPath.points.first.dx, drawingPath.points.first.dy);
 
-    Path path = Path();
-    path.moveTo(700, 700);
-    path.lineTo(800, 500);
-    path.lineTo(900, 700);
-    path.close();
-    canvas.drawPath(path, paint);
+        for (var i = 1; i < drawingPath.points.length; i++) {
+          path.lineTo(drawingPath.points[i].dx, drawingPath.points[i].dy);
+        }
+      }
+      canvas.drawPath(path, paint);
+    }
+    // for (var drawingPath in currentPaint) {
+    if (currentPaint.isNotEmpty) {
+      Path path = Path();
+
+      path.moveTo(currentPaint.first.dx, currentPaint.first.dy);
+
+      for (var i = 1; i < currentPaint.length; i++) {
+        path.lineTo(currentPaint[i].dx, currentPaint[i].dy);
+      }
+
+      canvas.drawPath(path, paint);
+    }
+    // }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    // TODO: implement shouldRepaint
-    // throw UnimplementedError();
-    return false;
+  bool shouldRepaint(covariant DrawingCanvas oldDelegate) {
+    return oldDelegate.paths.length != paths.length ||
+        oldDelegate.currentPaint.length != currentPaint.length;
   }
 }
