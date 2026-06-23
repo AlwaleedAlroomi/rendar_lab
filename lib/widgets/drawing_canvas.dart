@@ -4,18 +4,22 @@ import 'package:rendar_lab/models/drawing_path_model.dart';
 class DrawingCanvas extends CustomPainter {
   final List<DrawingPathModel> paths;
   final List<Offset> currentPaint;
+  final Color _selectedColor;
+  final double _currentStrokeWidth;
 
   DrawingCanvas({
     super.repaint,
     required this.paths,
     required this.currentPaint,
+    required this._selectedColor,
+    required this._currentStrokeWidth,
   });
   // Painting method, Canvas = the paper to draw and paint on it
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 5
+      // ..color = paths.last.color
+      // ..strokeWidth = 5
       ..isAntiAlias = true
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
@@ -24,18 +28,21 @@ class DrawingCanvas extends CustomPainter {
     for (var drawingPath in paths) {
       Path path = Path();
       if (drawingPath.points.isNotEmpty) {
+        paint.color = drawingPath.color;
+        paint.strokeWidth = drawingPath.strokeWidth;
         path.moveTo(drawingPath.points.first.dx, drawingPath.points.first.dy);
 
         for (var i = 1; i < drawingPath.points.length; i++) {
           path.lineTo(drawingPath.points[i].dx, drawingPath.points[i].dy);
         }
       }
+
       canvas.drawPath(path, paint);
     }
-    // for (var drawingPath in currentPaint) {
     if (currentPaint.isNotEmpty) {
       Path path = Path();
-
+      paint.color = _selectedColor;
+      paint.strokeWidth = _currentStrokeWidth;
       path.moveTo(currentPaint.first.dx, currentPaint.first.dy);
 
       for (var i = 1; i < currentPaint.length; i++) {
@@ -44,7 +51,6 @@ class DrawingCanvas extends CustomPainter {
 
       canvas.drawPath(path, paint);
     }
-    // }
   }
 
   @override

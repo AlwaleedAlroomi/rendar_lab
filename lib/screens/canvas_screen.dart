@@ -10,8 +10,27 @@ class CanvasScreen extends StatefulWidget {
 }
 
 class _CanvasScreenState extends State<CanvasScreen> {
+  final TextEditingController _controller = TextEditingController();
   final List<DrawingPathModel> pointPath = [];
   final List<Offset> currentPath = [];
+  final List<Color> colors = [
+    Colors.black,
+    Colors.blue,
+    Colors.red,
+    Colors.yellow,
+    Colors.orange,
+    Colors.deepPurple,
+  ];
+  late Color _selectedColor;
+  double strokeWidth = 3.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedColor = colors.first;
+    _controller.text = strokeWidth.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +54,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
             pointPath.add(
               DrawingPathModel(
                 points: List.from(currentPath),
-                color: Colors.black,
+                color: _selectedColor,
+                strokeWidth: strokeWidth,
               ),
             );
             currentPath.clear();
@@ -46,8 +66,56 @@ class _CanvasScreenState extends State<CanvasScreen> {
           painter: DrawingCanvas(
             paths: pointPath,
             currentPaint: List.from(currentPath),
+            selectedColor: _selectedColor,
+            currentStrokeWidth: strokeWidth,
           ),
           child: SizedBox.expand(),
+        ),
+      ),
+      bottomSheet: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: colors.length + 1,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedColor = colors[index];
+                });
+              },
+              child: index == colors.length
+                  ? SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: TextField(
+                        controller: _controller,
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          setState(() {
+                            // _controller.text = value;
+                            strokeWidth = double.tryParse(value) ?? strokeWidth;
+                          });
+                        },
+                      ),
+                    )
+                  : Padding(
+                      padding: EdgeInsetsGeometry.symmetric(horizontal: 16),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: colors[index],
+                          shape: BoxShape.circle,
+                          border: _selectedColor == colors[index]
+                              ? BoxBorder.all(color: Colors.amber, width: 3)
+                              : null,
+                        ),
+                      ),
+                    ),
+            );
+          },
         ),
       ),
     );
