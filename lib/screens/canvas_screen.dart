@@ -12,6 +12,7 @@ class CanvasScreen extends StatefulWidget {
 class _CanvasScreenState extends State<CanvasScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<DrawingPathModel> pointPath = [];
+  late DrawingPathModel? _lastPoint;
   final List<Offset> currentPath = [];
   final List<Color> colors = [
     Colors.black,
@@ -23,6 +24,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
   ];
   late Color _selectedColor;
   double strokeWidth = 3.0;
+  final bool _isEraser = false;
+  final double eraserRadius = 20.0;
 
   @override
   void initState() {
@@ -36,40 +39,54 @@ class _CanvasScreenState extends State<CanvasScreen> {
     return Scaffold(
       body: GestureDetector(
         onPanStart: (details) {
-          setState(() {
-            currentPath.add(
-              Offset(details.localPosition.dx, details.localPosition.dy),
-            );
-          });
+          if (!_isEraser) {
+            setState(() {
+              currentPath.add(
+                Offset(details.localPosition.dx, details.localPosition.dy),
+              );
+            });
+          }
         },
         onPanUpdate: (details) {
-          setState(() {
-            currentPath.add(
-              Offset(details.localPosition.dx, details.localPosition.dy),
+          if (!_isEraser) {
+            setState(() {
+              currentPath.add(
+                Offset(details.localPosition.dx, details.localPosition.dy),
+              );
+            });
+          } else {
+            // TODO: implement eraser funciton
+            final fingerPosition = Offset(
+              details.localPosition.dx,
+              details.localPosition.dy,
             );
-          });
+            pointPath.map((e) {
+              if (fingerPosition.distance < eraserRadius) {}
+            });
+          }
         },
         onPanEnd: (details) {
-          setState(() {
-            pointPath.add(
-              DrawingPathModel(
-                points: List.from(currentPath),
-                color: _selectedColor,
-                strokeWidth: strokeWidth,
-              ),
-            );
-            currentPath.clear();
-          });
+          if (!_isEraser) {
+            setState(() {
+              pointPath.add(
+                DrawingPathModel(
+                  points: List.from(currentPath),
+                  color: _selectedColor,
+                  strokeWidth: strokeWidth,
+                ),
+              );
+              currentPath.clear();
+            });
+          }
         },
         child: CustomPaint(
           size: Size(double.infinity, double.infinity),
           painter: DrawingCanvas(
-            paths: pointPath,
+            paths: List.from(pointPath),
             currentPaint: List.from(currentPath),
             selectedColor: _selectedColor,
             currentStrokeWidth: strokeWidth,
           ),
-          child: SizedBox.expand(),
         ),
       ),
       bottomSheet: SizedBox(
@@ -87,17 +104,72 @@ class _CanvasScreenState extends State<CanvasScreen> {
               },
               child: index == colors.length
                   ? SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: TextField(
-                        controller: _controller,
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          setState(() {
-                            // _controller.text = value;
-                            strokeWidth = double.tryParse(value) ?? strokeWidth;
-                          });
-                        },
+                      width: 250,
+                      height: 50,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                setState(() {
+                                  strokeWidth =
+                                      double.tryParse(value) ?? strokeWidth;
+                                });
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (pointPath.isNotEmpty) {
+                                    _lastPoint = pointPath.last;
+                                    pointPath.removeLast();
+                                  }
+                                });
+                              },
+                              icon: Icon(Icons.undo),
+                            ),
+                          ),
+                          Expanded(
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (_lastPoint != null) {
+                                    pointPath.add(_lastPoint!);
+                                  }
+                                });
+                              },
+                              icon: Icon(Icons.redo),
+                            ),
+                          ),
+                          Expanded(
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (pointPath.isNotEmpty) {
+                                    pointPath.clear();
+                                  }
+                                });
+                              },
+                              icon: Icon(Icons.clear),
+                            ),
+                          ),
+                          Expanded(
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (_isEraser) {
+                                    pointPath.clear();
+                                  }
+                                });
+                              },
+                              icon: Icon(Icons.edit_off),
+                            ),
+                          ),
+                        ],
                       ),
                     )
                   : Padding(
