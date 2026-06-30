@@ -11,9 +11,10 @@ class CanvasScreen extends StatefulWidget {
 
 class _CanvasScreenState extends State<CanvasScreen> {
   final TextEditingController _controller = TextEditingController();
-  final List<DrawingPathModel> pointPath = [];
+  List<DrawingPathModel> pointPath = [];
   late DrawingPathModel? _lastPoint;
   final List<Offset> currentPath = [];
+  List<DrawingPathModel> notHit = [];
   final List<Color> colors = [
     Colors.black,
     Colors.blue,
@@ -24,7 +25,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   ];
   late Color _selectedColor;
   double strokeWidth = 3.0;
-  final bool _isEraser = false;
+  bool _isEraser = false;
   final double eraserRadius = 20.0;
 
   @override
@@ -55,13 +56,16 @@ class _CanvasScreenState extends State<CanvasScreen> {
               );
             });
           } else {
-            // TODO: implement eraser funciton
             final fingerPosition = Offset(
               details.localPosition.dx,
               details.localPosition.dy,
             );
-            pointPath.map((e) {
-              if (fingerPosition.distance < eraserRadius) {}
+            setState(() {
+              pointPath = pointPath.where((stroke) {
+                return stroke.points.every((point) {
+                  return (point - fingerPosition).distance > eraserRadius;
+                });
+              }).toList();
             });
           }
         },
@@ -104,7 +108,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
               },
               child: index == colors.length
                   ? SizedBox(
-                      width: 250,
+                      width: 400,
                       height: 50,
                       child: Row(
                         children: [
@@ -161,9 +165,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
                             child: IconButton(
                               onPressed: () {
                                 setState(() {
-                                  if (_isEraser) {
-                                    pointPath.clear();
-                                  }
+                                  _isEraser = !_isEraser;
                                 });
                               },
                               icon: Icon(Icons.edit_off),
