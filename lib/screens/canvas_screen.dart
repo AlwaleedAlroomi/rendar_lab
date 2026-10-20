@@ -27,23 +27,28 @@ class _CanvasScreenState extends State<CanvasScreen> {
       listenable: _controller,
       builder: (context, child) {
         return Scaffold(
-          body: GestureDetector(
-            onPanStart: (details) {
-              _controller.startStroke(details.localPosition);
-            },
-            onPanUpdate: (details) {
-              _controller.updateStroke(details.localPosition);
-            },
-            onPanEnd: (details) {
-              _controller.endStroke();
-            },
-            child: CustomPaint(
-              size: Size(double.infinity, double.infinity),
-              painter: DrawingCanvas(
-                paths: List.from(_controller.pointPath),
-                currentPaint: List.from(_controller.currentPath),
-                selectedColor: _controller.selectedColor,
-                currentStrokeWidth: _controller.strokeWidth,
+          body: InteractiveViewer(
+            boundaryMargin: const .all(20.0),
+            minScale: 0.1,
+            maxScale: 2.0,
+            child: GestureDetector(
+              onPanStart: (details) {
+                _controller.startStroke(details.localPosition);
+              },
+              onPanUpdate: (details) {
+                _controller.updateStroke(details.localPosition);
+              },
+              onPanEnd: (details) {
+                _controller.endStroke();
+              },
+              child: CustomPaint(
+                size: Size(double.infinity, double.infinity),
+                painter: DrawingCanvas(
+                  paths: List.from(_controller.pointPath),
+                  currentPaint: List.from(_controller.currentPath),
+                  selectedColor: _controller.selectedColor,
+                  currentStrokeWidth: _controller.strokeWidth,
+                ),
               ),
             ),
           ),
